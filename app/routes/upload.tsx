@@ -7,6 +7,7 @@ import {convertPdfToImage} from "~/lib/pdf2img";
 import {generateUUID} from "~/lib/utils";
 import {prepareInstructions} from "~/constants";
 
+
 const Upload = () => {
     const { auth, isLoading, fs, ai, kv } = usePuterStore();
     const navigate = useNavigate();
@@ -29,7 +30,6 @@ const Upload = () => {
         const imageFile = await convertPdfToImage(file);
         if(!imageFile.file) return setStatusText('Error: Failed to convert PDF to image');
 
-
         setStatusText('Uploading the image...');
         const uploadedImage = await fs.upload([imageFile.file]);
         if(!uploadedImage) return setStatusText('Error: Failed to upload image');
@@ -43,17 +43,15 @@ const Upload = () => {
             companyName, jobTitle, jobDescription,
             feedback: '',
         }
-
         await kv.set(`resume:${uuid}`, JSON.stringify(data));
 
         setStatusText('Analyzing...');
 
         const feedback = await ai.feedback(
             uploadedFile.path,
-            prepareInstructions({ jobTitle, jobDescription})
+            prepareInstructions({ jobTitle, jobDescription })
         )
-
-        if(!feedback) return setStatusText('Error: Failed to analyze resume');
+        if (!feedback) return setStatusText('Error: Failed to analyze resume');
 
         const feedbackText = typeof feedback.message.content === 'string'
             ? feedback.message.content
@@ -61,10 +59,11 @@ const Upload = () => {
 
         data.feedback = JSON.parse(feedbackText);
         await kv.set(`resume:${uuid}`, JSON.stringify(data));
-        setStatusText('Analysis complete, redirecting ...');
+        setStatusText('Analysis complete, redirecting...');
         console.log(data);
-
+        navigate(`/resume/${uuid}`);
     }
+
     const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         const form = e.currentTarget.closest('form');
@@ -86,14 +85,14 @@ const Upload = () => {
 
             <section className="main-section">
                 <div className="page-heading py-16">
-                    <h1> Smart feedback for your dream job </h1>
+                    <h1>Smart feedback for your dream job</h1>
                     {isProcessing ? (
                         <>
                             <h2>{statusText}</h2>
-                            <img src="/images/resume-scan.gif" className="w-full"   />
+                            <img src="/images/resume-scan.gif" className="w-full" />
                         </>
                     ) : (
-                        <h2> Drop your resume for an ATS score and improvement tips</h2>
+                        <h2>Drop your resume for an ATS score and improvement tips</h2>
                     )}
                     {!isProcessing && (
                         <form id="upload-form" onSubmit={handleSubmit} className="flex flex-col gap-4 mt-8">
